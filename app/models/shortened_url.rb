@@ -19,6 +19,12 @@ class ShortenedUrl < ActiveRecord::Base
     through: :visits,
     source: :visited_user
 
+  has_many :taggings
+
+  has_many :tags,
+    through: :taggings,
+    source: :tag_topic
+
   def self.random_code
     begin
       random_code = SecureRandom::urlsafe_base64(16)
@@ -32,10 +38,14 @@ class ShortenedUrl < ActiveRecord::Base
       :submitter_id => user.id})
   end
 
-  # def self.prune(n)
-  #   self.visits.where("created_at > ?", n.minutes.ago)
-  #
-  # end
+  def self.prune(n)
+    short_url_id = Visit.select(:shortened_url_id).where("created_at > ?", n.minutes.ago)
+                        .distinct.map{ |visit| visit.shortened_url_id }
+    ShortenedUrl
+      .joins("INNER JOIN users u ON u.id = shortened_urls.submitter_id")
+      .where("shortened_urls.id NOT IN (?) AND u.premium = FALSE", short_url_id)
+      .each {|url| url.delete }
+  end
 
   def num_clicks
     self.visits.count
