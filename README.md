@@ -1,4 +1,3 @@
 # URL Shortener #
-
-# How to run the CLI"
-rails runner bin/cli
+`bundle install`
+`rails runner bin/cli`

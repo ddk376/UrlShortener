@@ -14,11 +14,11 @@ end until input == "0" || input == "1"
 
 if input == "0"
   created = false
-  do
+  begin
     puts "Type in your long url"
     long_url = gets.chomp
 
-    shortenedUrl = ShortenedUrl.find_by({long_url: longurl})
+    shortenedUrl = ShortenedUrl.find_by({long_url: long_url})
     if shortenedUrl.nil?
       shortenedUrl = ShortenedUrl::create_for_user_and_long_url!(user, long_url)
       created = true
