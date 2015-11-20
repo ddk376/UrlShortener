@@ -41,7 +41,7 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   def num_recent_uniques
-    self.num_uniques.where("created_at > ?", 10.minutes.ago)
+    self.visitors.where("created_at > ?", 10.minutes.ago)
   end
 
 end
