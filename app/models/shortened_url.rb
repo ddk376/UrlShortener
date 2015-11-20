@@ -1,7 +1,7 @@
 require 'SecureRandom'
 class ShortenedUrl < ActiveRecord::Base
   validates :short_url, :presence => true, :uniqueness => true
-  validates :long_url, :presence => true
+  validates :long_url, :presence => true, length: {maximum: 1024}
   validates :submitter_id, :presence => true
 
   belongs_to :submitter,
@@ -31,6 +31,11 @@ class ShortenedUrl < ActiveRecord::Base
     ShortenedUrl.create({:short_url => self.random_code, :long_url => long_url,
       :submitter_id => user.id})
   end
+
+  # def self.prune(n)
+  #   self.visits.where("created_at > ?", n.minutes.ago)
+  #
+  # end
 
   def num_clicks
     self.visits.count
