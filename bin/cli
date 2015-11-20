@@ -1,0 +1,36 @@
+#require_relative '../models/shortened_url'
+#require_relative '../models/user'
+#require_relative '../models/visit'
+
+puts "Input your email:"
+email = gets.chomp
+
+user = User.find_by({email: email})
+if user.nil?
+  user.create!({email: email})
+end
+puts "What do you want to do?"
+puts "0. Create shortened URL"
+puts "1. Visit shortened URL"
+begin
+  input = gets.chomp
+end until input == "0" || input == "1"
+
+if input == "0"
+  puts "Type in your long url"
+  long_url = gets.chomp
+
+  shortenedUrl= ShortenedUrl::create_for_user_and_long_url!(user, long_url)
+
+  puts "Short url is: " + shortenedUrl.short_url
+else
+  puts "Type in the shortened URL"
+  begin
+    url = gets.chomp
+    url = ShortenedUrl.find_by({short_url: url})
+  end until url
+  Visit::record_visit!(user, url)
+
+  puts "Launching " + url.long_url + " ..."
+  puts "Goodbye!"
+end

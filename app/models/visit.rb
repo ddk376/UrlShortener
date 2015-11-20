@@ -3,7 +3,7 @@ class Visit < ActiveRecord::Base
   validates :shortened_url_id, :presence => true
 
   def self.record_visit!(user, shortened_url)
-    Visit.new({:submitter_id => user.id, :shortened_url_id => shortened_url.id})
+    Visit.new({:user_id => user.id, :shortened_url_id => shortened_url.id})
   end
 
   belongs_to :short_url,
@@ -11,7 +11,7 @@ class Visit < ActiveRecord::Base
     foreign_key: :shortened_url_id,
     primary_key: :id
 
-  belongs_to :submitter,
+  belongs_to :visited_user,
     class_name: "User",
     foreign_key: :submitter_id,
     primary_key: :id

@@ -4,7 +4,7 @@ class ShortenedUrl < ActiveRecord::Base
   validates :long_url, :presence => true
   validates :submitter_id, :presence => true
 
-  belongs_to :user,
+  belongs_to :submitter,
     class_name: "User",
     foreign_key: :submitter_id,
     primary_key: :id
@@ -15,19 +15,20 @@ class ShortenedUrl < ActiveRecord::Base
     primary_key: :id
 
   has_many :visitors,
+    Proc.new { distinct },
     through: :visits,
-    source: :submitter
+    source: :visited_user
 
   def self.random_code
     begin
-      random_code = SecureRandom::urlsafe_base64
+      random_code = SecureRandom::urlsafe_base64(16)
     end until !ShortenedUrl.exists?(:short_url => random_code)
 
     random_code
   end
 
   def self.create_for_user_and_long_url!(user, long_url)
-    ShortenedUrl.new({:short_url => self.random_code, :long_url => long_url,
+    ShortenedUrl.create({:short_url => self.random_code, :long_url => long_url,
       :submitter_id => user.id})
   end
 
@@ -36,7 +37,7 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   def num_uniques
-    self.visits.select(:submitter_id).distinct.count
+    self.visitors.count.where("created_at > ?", 10.minutes.ago)
   end
 
 end

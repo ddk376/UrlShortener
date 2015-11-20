@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150812205213) do
+ActiveRecord::Schema.define(version: 20151120044127) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -37,12 +37,11 @@ ActiveRecord::Schema.define(version: 20150812205213) do
 
   create_table "visits", force: true do |t|
     t.integer  "shortened_url_id"
-    t.integer  "submitter_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "user_id"
   end
 
   add_index "visits", ["shortened_url_id"], name: "index_visits_on_shortened_url_id", using: :btree
-  add_index "visits", ["submitter_id"], name: "index_visits_on_submitter_id", using: :btree
 
 end
