@@ -1,13 +1,10 @@
-#require_relative '../models/shortened_url'
-#require_relative '../models/user'
-#require_relative '../models/visit'
-
-puts "Input your email:"
-email = gets.chomp
+#puts "Input your email:"
+#email = gets.chomp
+email = "ddk376@gmail.com"
 
 user = User.find_by({email: email})
 if user.nil?
-  user.create!({email: email})
+  User.create!({email: email})
 end
 puts "What do you want to do?"
 puts "0. Create shortened URL"
@@ -32,5 +29,6 @@ else
   Visit::record_visit!(user, url)
 
   puts "Launching " + url.long_url + " ..."
+  Launchy.open(url.long_url)
   puts "Goodbye!"
 end
