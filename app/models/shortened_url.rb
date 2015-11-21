@@ -34,8 +34,7 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   def self.create_for_user_and_long_url!(user, long_url)
-    ShortenedUrl.create({:short_url => self.random_code, :long_url => long_url,
-      :submitter_id => user.id})
+    ShortenedUrl.create({short_url: self.random_code, long_url: long_url, submitter_id: user.id })
   end
 
   def self.prune(n)

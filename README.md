@@ -7,7 +7,8 @@
 - [x] TagTopic and Tagging: able to query for the most popular links in each category
 - [x] Length of URL strings < 1024
 - [x] no more than 5 urls are submitted in the last minute by one user, except premium users
-- [x] `ShortenedUrl::prune` deletes any shortened urls that have not been visited in the last (n) minutes. Does not prune urls submitted by premium users. Automated in rake
+- [x] `ShortenedUrl::prune` deletes any shortened urls that have not been visited in the last (n) minutes. Does not prune urls submitted by premium users.
+- [ ] Automate `ShortenedUrl::prune` in rake
 * Alternative URL shortening strategies
 - [ ] Custom URLs for premium users
 - [ ] Series of random dictionary words

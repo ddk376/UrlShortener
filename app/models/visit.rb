@@ -20,7 +20,7 @@ class Visit < ActiveRecord::Base
 
   def self.not_too_much_submitted?(user)
     return false if user.premium
-    count = user.submitted_urls.where("created_at < ?", 1.minutes.ago).length <= 4 ||
+    count = user.submitted_urls.where("created_at < ?", 1.minutes.ago).length
     if count.nil? || count < MAX_SUBMITS
       return false
     end
