@@ -15,6 +15,7 @@ This is inspired by [Google's shortener](https://goo.gl/)
 - adds "scope block" in `ShortenedUrl has_many :visitors` to remove duplicates
 - script to handle user input is stored in `bin/cli`
 - Uses `launchy` gem to pop open the original URL in a browser
+- `prune.rake` file to automate pruning of old shortened urls
 
 ## Bonus Implementations
 - [x] TagTopic and Tagging: able to query for the most popular links in each category
