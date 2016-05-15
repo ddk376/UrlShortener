@@ -13,9 +13,9 @@
 - [ ] Custom URLs for premium users
 - [ ] Series of random dictionary words
 * Votine on URLs
-- [ ] Add a Vote model
-- [ ] Users can upvote (+1) or downvote(-1)
-- [ ] No more than one vote per user/url combo
-- [ ] Users cannot vote for their own URLs
+- [x] Add a Vote model
+- [x] Users can upvote (+1) or downvote(-1)
+- [x] No more than one vote per user/url combo
+- [x] Users cannot vote for their own URLs
 - [ ] `ShortenedUrl::top`, sorted by total vote score
 - [ ] `ShortenedUrl::hot`, sorted by vote score in the last (n) minutes    

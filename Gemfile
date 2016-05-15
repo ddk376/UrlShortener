@@ -33,6 +33,19 @@ group :doc do
   gem 'sdoc', require: false
 end
 
+group :development do
+  # run 'annotate' in Terminal to add helpful comments to models
+  gem 'annotate'
+
+  # These two give  great error handling page
+  # But never use them in production
+  gem 'better_errors'
+  gem 'binding_of_caller'
+
+  gem 'byebug'
+  gem 'pry-rails'
+end
+
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.1.2'
 
