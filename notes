@@ -1,0 +1,260 @@
+You can make a rails app with a Postgres databas by using the --database=postgresql
+
+Replace `gem sqlite3` line in the `Gemfile` with `gem 'pg'`
+
+Programs can store and pull out data from SQL databases. Data fetched from the DB can then be
+used to populate the attributes of Ruby objects
+
+Migrations track the evolution of the database schema, because as the program is written, the
+structure of the database will evolve.
+
+Because we develop our app on our own machine, with out own local development databas, but later
+deploy our application to a server running a production database, we need a way to
+record the transformations we've made locally, so that they may be "played back" and performed on the serve databas when we
+deploy our code
+
+Migrations is a file containing Ruby code that describes a set of changes applied to the database
+It may create or drop tables; it may add or remove columns from a table. Each new set of changes
+is written inside a new migration file, which is checked into the repository.
+
+Migration is a Ruby class that extends `ActiveRecord::Migration`
+`class CreateProducts < ActiveRecord::Migration
+  def up
+    create_table :products do |t|
+      t.string :name
+      t.text :description
+
+      t.timestamps
+    end
+  end
+
+  def down
+    drop_table
+      drop_table :products
+    end
+  end
+`
+This migration adds a table called `products` with a string column `name` (`VARCHAR(255)`: the length
+can be specified as an option) and a `TEXT` column called `description`. A primary key column called `id`
+will also be added; this is the default, we do not need to explicitly specify it. The timestamps columns
+`created_at` and `updated_at` which ActiveRecord populates automatically will also be added because of `t.timstamps`
+
+We also define how to undo the migration in `down`; we drop the table. We'll talk about why you might want to
+roll back a migration later
+
+`change` method
+It is often unnecessary to write the `down` method; the opposite of adding a column is always to drop the column;
+the opposite of creating a table is to drop the table
+
+Rails 3.1 makes migrations smarter by providing a `change` method. This method is preferred for writing
+constructive migrations (i.e. when adding columns or tables). The migration knows how to migrate your database
+and reverse it when the migration is rolled back without the need to write a separate `down` method.
+
+`
+class CreateProducts < ActiveRecord::Migration
+  def change
+    create_table :products do |t|
+      t.string :name
+      t.text :description
+
+      t.timestamps
+    end
+  end
+end
+`
+
+However it won't help for migrations which remove a column
+`
+class CreateProducts < ActiveRecord::Migration
+  def change
+    remove_column :products, :description
+  end
+end
+`
+
+We can still run `up`, but running `down`, the migration won't know how to add back the `description` column;
+it hasn't recorded the type of this column, so it doesn't know what kind of column to restore. If you try to roll back
+this migration, ActiveRecord will yell at you.
+
+`rails generate migration AddPartNumberToProducts` will generate a change migration
+
+`t.data_type :column_name, {:option1 => :option_value, :option2 => :option_value}`
+
+Supported column types include:
+- `:boolean`
+- `:date`
+- `:datetime`
+- `:float`
+- `:integer`
+- `:string`
+- `:text`
+- `:time`
+
+# Changing tables
+- `add_column :table_name, :column_name, :type, options_hash`
+- `remove_column :table_name, :column_name`
+- `rename_column :table_name, :old_column_name, :new_column_name`
+- `rename_table :old_table_name, :new_table_name`
+- `add_index :table_name, [:column1, :column2], options_hash`
+- `change_column :table_name, :column_name, :type, options_hash`
+    i. Change the data type of a column
+    ii. Add the option `:null => false` to add `NOT NULL` constraint
+    iii. Add the option `:default => value` to specify a default value
+
+If you use a `remove_column` or `change_column` you also need to write `up` and `down`
+methods because ActiveRecord will not be sure how to deal with reversing these commands
+
+#timestamps
+`t.timestamps` create `created_at` and `updated_at` columns
+And these columns will be automatically populated when you create a record; later, each time you update the row
+Rails will update the updated_at attribute, too. This can help you keep track of the evolution of your data when trying to debug problems later
+
+
+`rake db:migrate` to perform the migrations. This will look in the `db/migrate` directory, find
+all unexecuted migrations, and run their `up` or `change` methods in order of creation time. Only
+when you run the rake task is the database actually modified.
+
+Rails runs all "pending" migrations: migrations files in `db/migrate` that have not been previously run.
+Which migrations have been run are tracked in the database. ActiveRecord creates a table, `schema_migrations`,
+which stored the timestamp of each run migration. When a migration is run, a row with the migration timestamp is
+added to `schema_migrations`. Rails will not run any migration whose timestamp is in `schema_migrations`
+
+`rake db:rollback`  - reverse the changes by calling the `down` if it is possible and this will undo the changes
+and remove the timestamp from `schema_migrations`
+
+It is okay to edit recent migrations as part of the development process. But after you have written a migration,
+committed it and pushed it to github, do not return to edit it. Treat that as a permanent part of the historical
+record of your schema's evolution.
+
+
+The Schema file
+`db/schema.rb` which is essentially one big migration that ActiveRecord generates. Each time you run a migration,
+ActiveRecord will examine the resulting schema of the entire database, and dump this description into
+`db/schema.rb` This file is not designed to be edited by humans, it just represents the current state of the database.
+
+`rake db:schema:load`  - error prone and no need to initialize a new database by replaying the entire
+migration history. It is much simpler and faster to just load into the database a description of current
+schema. For this reason, the schema file should be checked into source control and tracked.
+
+Running arbitrary code
+Migrations are not limited to changing the schema. We can run arbitrary code in our migrations. This is helpful to fix
+bad data in the database or populate new fields.
+
+`
+class AddReceiveNewsletterToUsers < ActiveRecord::Migration
+  def up
+    change_table :users do |t|
+      t.boolean :receive_newsletter, :default => false
+    end
+
+    User.each do |user|
+      #sign up existing users for the newsletter, though
+      user.receive_newsletter = true
+      user.save!
+    end
+  end
+
+  def down
+    remove_column :users, :receive_newsletter
+  end
+end
+`
+New users are by default not signed up for the newsletter but the already users are set to be subscribe to the newletter
+
+SQL queries -> only ruby syntax and the data a returned in generic `Hash`
+`
+> CREATE TABLE cars (make VARCHAR(255), model VARCHAR(255), year INTEGER)
+> INSERT INTO cars (model, make, year)
+  ("Toyota", "Camry", 1997),
+  ("Toyota", "Land Cruiser", 1989),
+  ("Citroen", "DS", 1969)
+`
+
+`
+require 'sqlite3'
+db = SQLite3::Database.new("cars.db")
+db.results_as_hash = true
+db.type_translation = true
+
+cars = db.execute("SELECT * FROM cars")
+`
+
+Object Relational Mapping (ORM) is the system that translates betwen SQL records and
+a programming language objects. The ORM emposers classes with convenient methods to perform common SQL
+operations: for instance
+
+`
+# app/models/physician.rb
+class Physician < ActiveRecord::Base
+end
+`
+`ActiveRecord::Base` - the name of the class is important; ActiveRecord is able to infer form the class
+name `Physician` that the associated table is `physicians`. Model classes are always singular (just like tables
+are always plural)
+
+`::find` and `:all`
+`
+# return an array of Physician objects, one for each row in the physicians table
+Physician.all
+# lookup the Physician with primary key (id) 101
+Physician.find(101)
+`
+
+`::where` queries
+`
+# return an array of Physicians based in La Jolla
+Physician.where("home_city = ?", "La Jolla")
+# Executes:
+#   SELECT *
+#     FROM physicians
+#     WHERE physicians.home_city = 'La Jolla'
+`
+
+The ? interpolation character so as to avoid the Bobby Tables (SQL injection) attack
+
+`
+# physicians at any of these three schools
+Physician.where(:college => ["City College", "Columbia", "NYU"])
+# => SELECT * FROM physicians WHERE college IN ('City College', 'Columbia', 'NYU')
+# physicians with 3-9  years experience
+Physician.where(:years_experience => (3..9))
+# => SELECT * FROM physicians WHERE years_experience BETWEEN 3 AND 9
+`
+
+Updating and Inserting rows
+By extending `ActiveRecord::Base`, your model class will automatically receive getter/setter
+methods for each of the database columns. This is convenient, since you won't have to write `attr_accessor` for each
+column.
+`
+# create a new Physician object
+p = Physician.new
+
+#set some fields
+p.name = "Jonas Salk"
+p.college = "City College"
+p.home_city = "La Jolla"
+
+p.save!
+`
+`#save!` will warn you if you failed to save the object, whereas `#save` will quietly return `false`
+it returns `true` on success.
+
+`
+Physician.create!(
+  :name => "Jonas Salk",
+  :college => "City College",
+  :home_city => "La Jolla"
+)
+`
+To save some steps of `#save!`, we can use `#create!`
+
+`physician.destroy`
+
+`rails console` or `rails c` - this is available due to `gem pry-rails`
+
+One big difference `rails console` and `pry`/`irb` is that the console will take care of
+loading your Rails application so you won't have to `require` your model classes manually. It will also
+open up a connection to the DB for you.
+Use `load` to re-load source code from the console. In the Rails console, run the `reload!` command;
+this will re-load all the model classes
+If you want to access a SQL console, you may conveniently run `rails dbconsole`

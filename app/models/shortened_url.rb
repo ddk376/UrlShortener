@@ -38,7 +38,8 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   def self.prune(n)
-    short_url_id = Visit.select(:shortened_url_id).where("created_at > ?", n.minutes.ago)
+    short_url_id = Visit.select(:shortened_url_id)
+                        .where("created_at > ?", n.minutes.ago)
                         .distinct.map{ |visit| visit.shortened_url_id }
     ShortenedUrl
       .joins("INNER JOIN users u ON u.id = shortened_urls.submitter_id")
@@ -52,6 +53,7 @@ class ShortenedUrl < ActiveRecord::Base
 
   def num_uniques
     self.visitors.count
+    # Visit.select(user_id).distinct.count
   end
 
   def num_recent_uniques
