@@ -33,8 +33,21 @@ class ShortenedUrl < ActiveRecord::Base
     random_code
   end
 
+  def self.premium_random_code
+    begin
+      random_code = pick_randon_dictionary_line
+    end until !ShortenedUrl.exists?(:short_url => random_code)
+
+    random_code
+  end
+
   def self.create_for_user_and_long_url!(user, long_url)
-    ShortenedUrl.create({short_url: self.random_code, long_url: long_url, submitter_id: user.id })
+    if user.premium
+      randon_code = self.premium_random_code
+    else
+      random_code = self.random_code
+    end
+    ShortenedUrl.create({short_url: random_code, long_url: long_url, submitter_id: user.id })
   end
 
   def self.prune(n)
@@ -58,6 +71,15 @@ class ShortenedUrl < ActiveRecord::Base
 
   def num_recent_uniques
     self.visitors.where("created_at > ?", 10.minutes.ago)
+  end
+
+  private
+  def pick_randon_dictionary_line
+    chosen_line = nil
+    File.foreach("../../dictionary.txt").each_with_index do |line, number|
+      chosen_line = line if rand < 1.0/(number+1)
+    end
+    return chosen_line.chomp
   end
 
 end

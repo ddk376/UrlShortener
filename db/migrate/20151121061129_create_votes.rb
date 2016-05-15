@@ -7,5 +7,7 @@ class CreateVotes < ActiveRecord::Migration
       t.integer :downvote, default: 0
       t.timestamps
     end
+
+    add_index :votes, [:user_id, :shortened_url_id], unique: true
   end
 end
