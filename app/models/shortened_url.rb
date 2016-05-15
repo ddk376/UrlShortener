@@ -60,6 +60,23 @@ class ShortenedUrl < ActiveRecord::Base
       .each {|url| url.delete }
   end
 
+  def self.top
+    #sorted by total vote score
+    ShortenedUrl.select("shortened_urls.*")
+                .joins("INNER JOIN votes v ON v.shortened_url_id = shortened_urls.id ")
+                .group("shortened_urls.id")
+                .order("COUNT(shortened_urls.id) DESC")
+  end
+
+  def self.hot(n)
+    # sorted by vote score in the last (n) minutes
+    ShortenedUrl.select("shortened_urls.*")
+                .joins("INNER JOIN votes v ON v.shortened_url_id = shortened_urls.id ")
+                .group("shortened_urls.id")
+                .where("v.created_at > ?", n.minutes.ago)
+                .order("COUNT(shortened_urls.id) DESC")
+  end
+
   def num_clicks
     self.visits.count
   end
